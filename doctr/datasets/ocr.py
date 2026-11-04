@@ -55,7 +55,9 @@ class OCRDataset(AbstractDataset):
 
             # handle empty images
             if len(annotations["typed_words"]) == 0:
-                self.data.append((img_name, dict(boxes=np.zeros((0, 4), dtype=np_dtype), labels=[])))
+                # same box format as the images with words: (0, 4, 2) polygons or (0, 4) straight boxes
+                empty_boxes = np.zeros((0, 4, 2) if use_polygons else (0, 4), dtype=np_dtype)
+                self.data.append((img_name, dict(boxes=empty_boxes, labels=[])))
                 continue
             # Unpack the straight boxes (xmin, ymin, xmax, ymax)
             geoms = [list(map(float, obj["geometry"][:4])) for obj in annotations["typed_words"]]

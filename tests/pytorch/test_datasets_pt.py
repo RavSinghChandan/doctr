@@ -422,6 +422,19 @@ def test_ocrdataset(mock_ocrdataset, use_polygons):
     move(os.path.join(ds.root, "tmp_file"), os.path.join(ds.root, img_name))
 
 
+@pytest.mark.parametrize("use_polygons, expected_shape", [(False, (0, 4)), (True, (0, 4, 2))])
+def test_ocrdataset_image_without_words(tmp_path, mock_image_stream, use_polygons, expected_shape):
+    # An image without any word has the same box format as the other images
+    (tmp_path / "images").mkdir()
+    (tmp_path / "images" / "empty.jpg").write_bytes(mock_image_stream)
+    (tmp_path / "labels.json").write_text(json.dumps({"empty.jpg": {"typed_words": []}}))
+
+    ds = datasets.OCRDataset(str(tmp_path / "images"), str(tmp_path / "labels.json"), use_polygons=use_polygons)
+    target = ds[0].target
+    assert target["boxes"].shape == expected_shape
+    assert target["labels"] == []
+
+
 def test_charactergenerator():
     input_size = (32, 32)
     vocab = "abcdef"
